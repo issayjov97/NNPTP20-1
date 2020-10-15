@@ -27,6 +27,7 @@ namespace INPTPZ1
         static void Main(string[] args)
         {
             // TODO: add parameters from args?
+            ArgsController.initArgs(args);
             FractalViewer fractalViewer = new FractalViewer();
             fractalViewer.DrawImage();
             Console.ReadKey();
@@ -38,22 +39,36 @@ namespace INPTPZ1
 
         class ArgsController
         {
-            public static readonly int[] intargs;
-            public static readonly double[] doubleargs;
-            public static readonly String outputPath;
+            private static  int[] intargs;
+            private static  double[] doubleargs;
+            private static  String outputPath;
 
-            public ArgsController(string[] args)
+            public static void initArgs(string[] args)
             {
-                intargs = GetIntArgs(args);
-                doubleargs = GetDoubleArgs(args);
-                outputPath = GetOutputPath(args);
+                intargs = SetIntArgs(args);
+                doubleargs = SetDoubleArgs(args);
+                outputPath = SetOutputPath(args);
             }
 
-            private String GetOutputPath(string[] args){
+
+            public static String GetOutputPath()
+            {
+                return outputPath;
+            }
+            public static int GetIntArgs(int index)
+            {
+                return intargs[index];
+            }
+            public static double GetDoubleArgs(int index)
+            {
+                return doubleargs[index];
+            }
+
+            private static String SetOutputPath(string[] args){   
                 return args[6];
             }
 
-            private int[] GetIntArgs(string[] args)
+            private static int[] SetIntArgs(string[] args)
             {
                 intargs = new int[2];
                 for (int i = 0; i < intargs.Length; i++)
@@ -64,7 +79,7 @@ namespace INPTPZ1
             return intargs;
             }
 
-            private  double[] GetDoubleArgs(string[] args)
+            private static double[] SetDoubleArgs(string[] args)
             {
                 doubleargs = new double[4];
                 for (int i = 0; i < doubleargs.Length; i++)
@@ -78,16 +93,16 @@ namespace INPTPZ1
 
         class FractalViewer
         {
-            private readonly Color colors;
+            private  Color[] colors;
             private  Bitmap bitmap;
             private NewtonFractal newtonFactorial;
-            public FractalViewer(string[] args){
-                bitmap = new Bitmap(ArgsController.intargs[0],ArgsController.intargs[1]);
-                newtonFactorial = new NewtonFactorial(ArgsController.intargs,ArgsController.doubleargs);
+
+            public FractalViewer(){
+                bitmap = new Bitmap(ArgsController.GetIntArgs(0),ArgsController.GetIntArgs(1));
+                newtonFactorial = new NewtonFractal();
                 colors = new Color[]{
                 Color.Red, Color.Blue, Color.Green, Color.Yellow, Color.Orange,
-                Color.Fuchsia, Color.Gold, Color.Cyan, Color.Magenta 
-                };
+                Color.Fuchsia, Color.Gold, Color.Cyan, Color.Magenta };
             }
 
             public void DrawImage(){
@@ -100,12 +115,12 @@ namespace INPTPZ1
                         var it = newtonFactorial.SolveEquationUsingNewtonsIteration();
                         var vv = colors[id % colors.Length];
                         vv = Color.FromArgb(vv.R, vv.G, vv.B);
-                        vv = Color.FromArgb(Math.Min(Math.Max(0, vv.R-(int)it*2), 255), Math.Min(Math.Max(0, vv.G - (int)it*2), 255), Math.Min(Math.Max(0, vv.B - (int)it*2), 255));
-                    //vv = Math.Min(Math.Max(0, vv), 255);
-                    bmp.SetPixel(j, i, vv);
+                        vv = Color.FromArgb(Math.Min(Math.Max(0, vv.R-it*2), 255), Math.Min(Math.Max(0, vv.G - it*2), 255), Math.Min(Math.Max(0, vv.B - it*2), 255));
+                        //vv = Math.Min(Math.Max(0, vv), 255);
+                        bitmap.SetPixel(j, i, vv);
                     }
                 }
-                    bmp.Save(ArgsController.outputPath ?? "../../../out.png");
+                bitmap.Save(ArgsController.GetOutputPath() ?? "../../../out.png");
             }
 
 
@@ -113,26 +128,26 @@ namespace INPTPZ1
         class NewtonFractal
         {
 
-            private  readonly double xmin;
-            private  readonly double xmax;
-            private  readonly double ymin;
-            private  readonly double ymax;
-            private  readonly double xstep;
-            private  readonly double ystep;
-            private  readonly Polynomial polynomial;
-            private  readonly Polynomial derivativePolynomial;
+            private   double xmin;
+            private   double xmax;
+            private   double ymin;
+            private   double ymax;
+            private   double xstep;
+            private   double ystep;
+            private   Polynomial polynomial;
+            private   Polynomial derivativePolynomial;
             private List<ComplexNumber> roots;
             private ComplexNumber ox;
 
             public NewtonFractal()
             {
                 roots = new List<ComplexNumber>();
-                xmin = ArgsController.doubleargs[0];
-                xmax = ArgsController.doubleargs[1];
-                ymin = ArgsController.doubleargs[2];
-                ymax = ArgsController.doubleargs[3];
-                xstep = (xmax - xmin) / ArgsController.intargs[0];
-                ystep = (ymax - ymin) / ArgsController.intargs[1];
+                xmin = ArgsController.GetDoubleArgs(0);
+                xmax = ArgsController.GetDoubleArgs(1);
+                ymin = ArgsController.GetDoubleArgs(2);
+                ymax = ArgsController.GetDoubleArgs(3);
+                xstep = (xmax - xmin) / ArgsController.GetIntArgs(0);
+                ystep = (ymax - ymin) / ArgsController.GetIntArgs(1);
                 polynomial = getPolynomial();
                 derivativePolynomial = polynomial.Derive();
 
@@ -176,12 +191,12 @@ namespace INPTPZ1
             {
                 var known = false;
                 var id = 0;
-                for (int w = 0; w < roots.Count; w++)
+                for (int i = 0; i < roots.Count; i++)
                 {
-                    if (Math.Pow(ox.Re - roots[w].Re, 2) + Math.Pow(ox.Imaginari - roots[w].Imaginari, 2) <= 0.01)
+                    if (Math.Pow(ox.Re - roots[i].Re, 2) + Math.Pow(ox.Imaginari - roots[i].Imaginari, 2) <= 0.01)
                     {
                         known = true;
-                        id = w;
+                        id = i;
                     }
                 }
                 if (!known)
@@ -193,10 +208,10 @@ namespace INPTPZ1
                 return id;
             }
 
-            public float SolveEquationUsingNewtonsIteration()
+            public int SolveEquationUsingNewtonsIteration()
             {
-                float it = 0;
-                for (int q = 0; q < 30; q++)
+                int iteration = 0;
+                for (int i = 0; i < 30; i++)
                 {
                     var diff = polynomial.Evaluate(ox).Divide(derivativePolynomial.Evaluate(ox));
                     ox = ox.Subtract(diff);
@@ -204,12 +219,12 @@ namespace INPTPZ1
                     //Console.WriteLine($"{q} {ox} -({diff})");
                     if (Math.Pow(diff.Re, 2) + Math.Pow(diff.Imaginari, 2) >= 0.5)
                     {
-                        q--;
+                        i--;
                     }
-                    it++;
+                    iteration++;
                 }
 
-                return it;
+                return iteration;
             }
 
 
