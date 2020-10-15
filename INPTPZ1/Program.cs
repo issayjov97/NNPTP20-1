@@ -24,34 +24,122 @@ namespace INPTPZ1
     class Program
     {
 
-        public static int[] GetIntArgs(string[] args)
+        static void Main(string[] args)
         {
-            int[] intargs = new int[2];
-            for (int i = 0; i < intargs.Length; i++)
+            // TODO: add parameters from args?
+            FractalViewer fractalViewer = new FractalViewer();
+            fractalViewer.DrawImage();
+            Console.ReadKey();
+        }
+    }
+
+    namespace Mathematics
+    {
+
+        class ArgsController
+        {
+            public static readonly int[] intargs;
+            public static readonly double[] doubleargs;
+            public static readonly String outputPath;
+
+            public ArgsController(string[] args)
             {
-                intargs[i] = int.Parse(args[i]);
+                intargs = GetIntArgs(args);
+                doubleargs = GetDoubleArgs(args);
+                outputPath = GetOutputPath(args);
             }
+
+            private String GetOutputPath(string[] args){
+                return args[6];
+            }
+
+            private int[] GetIntArgs(string[] args)
+            {
+                intargs = new int[2];
+                for (int i = 0; i < intargs.Length; i++)
+                {
+                    intargs[i] = int.Parse(args[i]);
+                }
 
             return intargs;
-        }
-
-        public static double[] SetDoubleArgs(string[] args)
-        {
-             double[] doubleargs = new double[4];
-            for (int i = 0; i < doubleargs.Length; i++)
-            {   
-                doubleargs[i] = double.Parse(args[i + 2]);
             }
+
+            private  double[] GetDoubleArgs(string[] args)
+            {
+                doubleargs = new double[4];
+                for (int i = 0; i < doubleargs.Length; i++)
+                {   
+                    doubleargs[i] = double.Parse(args[i + 2]);
+                }
             return doubleargs;
+            }
+
         }
 
-        public static void DisplayPolynomials(Polynomial polynomial, Polynomial derivativePolynomial)
+        class FractalViewer
         {
-            Console.WriteLine(polynomial);
-            Console.WriteLine(derivativePolynomial);
-        }
+            private readonly Color colors;
+            private  Bitmap bitmap;
+            private NewtonFractal newtonFactorial;
+            public FractalViewer(string[] args){
+                bitmap = new Bitmap(ArgsController.intargs[0],ArgsController.intargs[1]);
+                newtonFactorial = new NewtonFactorial(ArgsController.intargs,ArgsController.doubleargs);
+                colors = new Color[]{
+                Color.Red, Color.Blue, Color.Green, Color.Yellow, Color.Orange,
+                Color.Fuchsia, Color.Gold, Color.Cyan, Color.Magenta 
+                };
+            }
 
-        private static Polynomial getPolynomial()
+            public void DrawImage(){
+
+                for (int i = 0; i < bitmap.Width; i++) {
+
+                    for (int j = 0; j < bitmap.Height; j++) {
+                        newtonFactorial.SetComplexNumber(i,j);
+                        var id = newtonFactorial.SolveRoot();
+                        var it = newtonFactorial.SolveEquationUsingNewtonsIteration();
+                        var vv = colors[id % colors.Length];
+                        vv = Color.FromArgb(vv.R, vv.G, vv.B);
+                        vv = Color.FromArgb(Math.Min(Math.Max(0, vv.R-(int)it*2), 255), Math.Min(Math.Max(0, vv.G - (int)it*2), 255), Math.Min(Math.Max(0, vv.B - (int)it*2), 255));
+                    //vv = Math.Min(Math.Max(0, vv), 255);
+                    bmp.SetPixel(j, i, vv);
+                    }
+                }
+                    bmp.Save(ArgsController.outputPath ?? "../../../out.png");
+            }
+
+
+    }
+        class NewtonFractal
+        {
+
+            private  readonly double xmin;
+            private  readonly double xmax;
+            private  readonly double ymin;
+            private  readonly double ymax;
+            private  readonly double xstep;
+            private  readonly double ystep;
+            private  readonly Polynomial polynomial;
+            private  readonly Polynomial derivativePolynomial;
+            private List<ComplexNumber> roots;
+            private ComplexNumber ox;
+
+            public NewtonFractal()
+            {
+                roots = new List<ComplexNumber>();
+                xmin = ArgsController.doubleargs[0];
+                xmax = ArgsController.doubleargs[1];
+                ymin = ArgsController.doubleargs[2];
+                ymax = ArgsController.doubleargs[3];
+                xstep = (xmax - xmin) / ArgsController.intargs[0];
+                ystep = (ymax - ymin) / ArgsController.intargs[1];
+                polynomial = getPolynomial();
+                derivativePolynomial = polynomial.Derive();
+
+            }
+
+
+        private Polynomial getPolynomial()
         {
             Polynomial polynomial = new Polynomial();
             polynomial.Coefficients.Add(new ComplexNumber() { Re = 1 });
@@ -61,48 +149,19 @@ namespace INPTPZ1
             return polynomial;
 
         }
-        static void Main(string[] args)
+
+        public void DisplayPolynomials()
         {
-            int[] intargs = GetIntArgs(args);
-            double[] doubleargs = GetDoubleArgs(args);
-            string output = args[6];
-            // TODO: add parameters from args?
-            Bitmap bmp = new Bitmap(intargs[0], intargs[1]);
-            double xmin = doubleargs[0];
-            double xmax = doubleargs[1];
-            double ymin = doubleargs[2];
-            double ymax = doubleargs[3];
+            Console.WriteLine(polynomial);
+            Console.WriteLine(derivativePolynomial);
+        }
 
-            double xstep = (xmax - xmin) / intargs[0];
-            double ystep = (ymax - ymin) / intargs[1];
-
-          
-            Polynomial polynomial = getPolynomial();
-            Polynomial derivativePolynomial = polynomial.Derive();
-
-            DisplayPolynomials(polynomial, derivativePolynomial);
-
-            var clrs = new Color[]
-            {
-                Color.Red, Color.Blue, Color.Green, Color.Yellow, Color.Orange, Color.Fuchsia, Color.Gold, Color.Cyan, Color.Magenta
-            };
-
-            var maxid = 0;
-
-            // TODO: cleanup!!!
-            // for every pixel in image...
-            for (int i = 0; i < intargs[0]; i++)
-            {
-                for (int j = 0; j < intargs[1]; j++)
-                {
-                    // find "world" coordinates of pixel
-                    double y = ymin + i * ystep;
-                    double x = xmin + j * xstep;
-
-                    ComplexNumber ox = new ComplexNumber()
+        public ComplexNumber SetComplexNumber(int i ,int j)
+        {
+            ComplexNumber ox = new ComplexNumber()
                     {
-                        Re = x,
-                        Imaginari = (float)(y)
+                        Re = xmin + j * xstep,
+                        Imaginari = ymin + i * ystep
                     };
 
                     if (ox.Re == 0)
@@ -110,96 +169,16 @@ namespace INPTPZ1
                     if (ox.Imaginari == 0)
                         ox.Imaginari = 0.0001;
 
-                    //Console.WriteLine(ox);
+            return ox;
 
-                    // find solution of equation using newton's iteration
-                    float it = 0;
-                    for (int q = 0; q< 30; q++)
-                    {
-                        var diff = polynomial.Evaluate(ox).Divide(derivativePolynomial.Evaluate(ox));
-                        ox = ox.Subtract(diff);
-
-                        //Console.WriteLine($"{q} {ox} -({diff})");
-                        if (Math.Pow(diff.Re, 2) + Math.Pow(diff.Imaginari, 2) >= 0.5)
-                        {
-                            q--;
-                        }
-                        it++;
-                    }
-
-                    //Console.ReadKey();
-
-                    // find solution root number
-                    var known = false;
-                    var id = 0;
-                    for (int w = 0; w <koreny.Count;w++)
-                    {
-                        if (Math.Pow(ox.Re- koreny[w].Re, 2) + Math.Pow(ox.Imaginari - koreny[w].Imaginari, 2) <= 0.01)
-                        {
-                            known = true;
-                            id = w;
-                        }
-                    }
-                    if (!known)
-                    {
-                        koreny.Add(ox);
-                        id = koreny.Count;
-                        maxid = id + 1; 
-                    }
-
-                    // colorize pixel according to root number
-                    //int vv = id;
-                    //int vv = id * 50 + (int)it*5;
-                    var vv = clrs[id % clrs.Length];
-                    vv = Color.FromArgb(vv.R, vv.G, vv.B);
-                    vv = Color.FromArgb(Math.Min(Math.Max(0, vv.R-(int)it*2), 255), Math.Min(Math.Max(0, vv.G - (int)it*2), 255), Math.Min(Math.Max(0, vv.B - (int)it*2), 255));
-                    //vv = Math.Min(Math.Max(0, vv), 255);
-                    bmp.SetPixel(j, i, vv);
-                    //bmp.SetPixel(j, i, Color.FromArgb(vv, vv, vv));
-                }
-            }
-
-                    bmp.Save(output ?? "../../../out.png");
-            Console.ReadKey();
         }
-    }
-
-    namespace Mathematics
-    {
-        class NewtonFactorial
-        {
-
-            List<ComplexNumber> koreny;
-            ComplexNumber ox;
-
-            public NewtonFactorial()
-            {
-                koreny = new List<ComplexNumber>();
-                ox = new ComplexNumber()
-                {
-                    Re = x,
-                    Imaginari = y
-                };
-
-            }
-
-            private void SetValues()
-            {
-                double[] doubleargs = Program.GetDoubleArgs();
-            //    xmin = Program doubleargs[0];
-                xmax = doubleargs[1];
-                ymin = doubleargs[2];
-                ymax = doubleargs[3];
-
-            }
-
-            public void SolveRoot()
+            public int SolveRoot()
             {
                 var known = false;
                 var id = 0;
-                for (int w = 0; w < koreny.Count; w++)
+                for (int w = 0; w < roots.Count; w++)
                 {
-                    if (Math.Pow(ox.Re - koreny[w].Re, 2) + Math.Pow(ox.Imaginari - koreny[w].Imaginari, 2) <= 0.01)
+                    if (Math.Pow(ox.Re - roots[w].Re, 2) + Math.Pow(ox.Imaginari - roots[w].Imaginari, 2) <= 0.01)
                     {
                         known = true;
                         id = w;
@@ -207,14 +186,14 @@ namespace INPTPZ1
                 }
                 if (!known)
                 {
-                    koreny.Add(ox);
-                    id = koreny.Count;
-                    maxid = id + 1;
+                    roots.Add(ox);
+                    id = roots.Count;
                 }
 
+                return id;
             }
 
-            private void SolveEquationUsingNewtonsIteration()
+            public float SolveEquationUsingNewtonsIteration()
             {
                 float it = 0;
                 for (int q = 0; q < 30; q++)
@@ -229,8 +208,9 @@ namespace INPTPZ1
                     }
                     it++;
                 }
-            }
 
+                return it;
+            }
 
 
         }
