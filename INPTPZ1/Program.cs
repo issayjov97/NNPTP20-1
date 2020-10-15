@@ -24,7 +24,7 @@ namespace INPTPZ1
     class Program
     {
 
-        private static int[] getIntArgs(string[] args)
+        public static int[] GetIntArgs(string[] args)
         {
             int[] intargs = new int[2];
             for (int i = 0; i < intargs.Length; i++)
@@ -35,7 +35,7 @@ namespace INPTPZ1
             return intargs;
         }
 
-           private static double[] getDoubleArgs(string[] args)
+        public static double[] SetDoubleArgs(string[] args)
         {
              double[] doubleargs = new double[4];
             for (int i = 0; i < doubleargs.Length; i++)
@@ -44,10 +44,27 @@ namespace INPTPZ1
             }
             return doubleargs;
         }
+
+        public static void DisplayPolynomials(Polynomial polynomial, Polynomial derivativePolynomial)
+        {
+            Console.WriteLine(polynomial);
+            Console.WriteLine(derivativePolynomial);
+        }
+
+        private static Polynomial getPolynomial()
+        {
+            Polynomial polynomial = new Polynomial();
+            polynomial.Coefficients.Add(new ComplexNumber() { Re = 1 });
+            polynomial.Coefficients.Add(ComplexNumber.Zero);
+            polynomial.Coefficients.Add(ComplexNumber.Zero);
+            polynomial.Coefficients.Add(new ComplexNumber() { Re = 1 });
+            return polynomial;
+
+        }
         static void Main(string[] args)
         {
-            int[] intargs = getIntArgs(args);
-            double[] doubleargs = getDoubleArgs(args);
+            int[] intargs = GetIntArgs(args);
+            double[] doubleargs = GetDoubleArgs(args);
             string output = args[6];
             // TODO: add parameters from args?
             Bitmap bmp = new Bitmap(intargs[0], intargs[1]);
@@ -59,18 +76,11 @@ namespace INPTPZ1
             double xstep = (xmax - xmin) / intargs[0];
             double ystep = (ymax - ymin) / intargs[1];
 
-            List<ComplexNumber> koreny = new List<ComplexNumber>();
-            // TODO: poly should be parameterised?
-            Polynom polynomial = new Polynom();
-            polynomial.ComplexNmbers.Add(new ComplexNumber() { Re = 1 });
-            polynomial.ComplexNmbers.Add(ComplexNumber.Zero);
-            polynomial.ComplexNmbers.Add(ComplexNumber.Zero);
-            //p.Coe.Add(Cplx.Zero);
-            polynomial.ComplexNmbers.Add(new ComplexNumber() { Re = 1 });
-            Polynom derivativePolynomial = polynomial.Derive();
+          
+            Polynomial polynomial = getPolynomial();
+            Polynomial derivativePolynomial = polynomial.Derive();
 
-            Console.WriteLine(polynomial);
-            Console.WriteLine(derivativePolynomial);
+            DisplayPolynomials(polynomial, derivativePolynomial);
 
             var clrs = new Color[]
             {
@@ -98,7 +108,7 @@ namespace INPTPZ1
                     if (ox.Re == 0)
                         ox.Re = 0.0001;
                     if (ox.Imaginari == 0)
-                        ox.Imaginari = 0.0001f;
+                        ox.Imaginari = 0.0001;
 
                     //Console.WriteLine(ox);
 
@@ -149,36 +159,93 @@ namespace INPTPZ1
                 }
             }
 
-            // TODO: delete I suppose...
-            //for (int i = 0; i < 300; i++)
-            //{
-            //    for (int j = 0; j < 300; j++)
-            //    {
-            //        Color c = bmp.GetPixel(j, i);
-            //        int nv = (int)Math.Floor(c.R * (255.0 / maxid));
-            //        bmp.SetPixel(j, i, Color.FromArgb(nv, nv, nv));
-            //    }
-            //}
-
                     bmp.Save(output ?? "../../../out.png");
-            //Console.ReadKey();
+            Console.ReadKey();
         }
     }
 
     namespace Mathematics
     {
-        class Polynom
+        class NewtonFactorial
         {
-            public List<ComplexNumber> ComplexNmbers { get; set; }
 
-            public Polynom() => ComplexNmbers = new List<ComplexNumber>();
+            List<ComplexNumber> koreny;
+            ComplexNumber ox;
 
-            public Polynom Derive()
+            public NewtonFactorial()
             {
-                Polynom polynom = new Polynom();
-                for (int i = 1; i < ComplexNmbers.Count; i++)
+                koreny = new List<ComplexNumber>();
+                ox = new ComplexNumber()
                 {
-                    polynom.ComplexNmbers.Add(ComplexNmbers[i].Multiply(new ComplexNumber() { Re = i }));
+                    Re = x,
+                    Imaginari = y
+                };
+
+            }
+
+            private void SetValues()
+            {
+                double[] doubleargs = Program.GetDoubleArgs();
+            //    xmin = Program doubleargs[0];
+                xmax = doubleargs[1];
+                ymin = doubleargs[2];
+                ymax = doubleargs[3];
+
+            }
+
+            public void SolveRoot()
+            {
+                var known = false;
+                var id = 0;
+                for (int w = 0; w < koreny.Count; w++)
+                {
+                    if (Math.Pow(ox.Re - koreny[w].Re, 2) + Math.Pow(ox.Imaginari - koreny[w].Imaginari, 2) <= 0.01)
+                    {
+                        known = true;
+                        id = w;
+                    }
+                }
+                if (!known)
+                {
+                    koreny.Add(ox);
+                    id = koreny.Count;
+                    maxid = id + 1;
+                }
+
+            }
+
+            private void SolveEquationUsingNewtonsIteration()
+            {
+                float it = 0;
+                for (int q = 0; q < 30; q++)
+                {
+                    var diff = polynomial.Evaluate(ox).Divide(derivativePolynomial.Evaluate(ox));
+                    ox = ox.Subtract(diff);
+
+                    //Console.WriteLine($"{q} {ox} -({diff})");
+                    if (Math.Pow(diff.Re, 2) + Math.Pow(diff.Imaginari, 2) >= 0.5)
+                    {
+                        q--;
+                    }
+                    it++;
+                }
+            }
+
+
+
+        }
+        class Polynomial
+        {
+            public List<ComplexNumber> Coefficients { get; set; }
+
+            public Polynomial() => Coefficients = new List<ComplexNumber>();
+
+            public Polynomial Derive()
+            {
+                Polynomial polynom = new Polynomial();
+                for (int i = 1; i < Coefficients.Count; i++)
+                {
+                    polynom.Coefficients.Add(Coefficients[i].Multiply(new ComplexNumber() { Re = i }));
                 }
 
                 return polynom;
@@ -187,9 +254,9 @@ namespace INPTPZ1
             public ComplexNumber Evaluate(ComplexNumber value)
             {
                 ComplexNumber result = ComplexNumber.Zero;
-                for (int i = 0; i < ComplexNmbers.Count; i++)
+                for (int i = 0; i < Coefficients.Count; i++)
                 {
-                    ComplexNumber coef = ComplexNmbers[i];
+                    ComplexNumber coef = Coefficients[i];
                     ComplexNumber bx = value;
                     int power = i;
 
@@ -210,9 +277,9 @@ namespace INPTPZ1
             public override string ToString()
             {
                 string result = "";
-                for (int i = 0; i < ComplexNmbers.Count; i++)
+                for (int i = 0; i < Coefficients.Count; i++)
                 {
-                    result += ComplexNmbers[i];
+                    result += Coefficients[i];
                     if (i > 0)
                     {
                         for (int j = 0; j < i; j++)
@@ -229,7 +296,7 @@ namespace INPTPZ1
         public class ComplexNumber
         {
             public double Re { get; set; }
-            public float Imaginari { get; set; }
+            public double Imaginari { get; set; }
 
             public override bool Equals(object obj)
             {
