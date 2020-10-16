@@ -26,8 +26,8 @@ namespace INPTPZ1
 
         static void Main(string[] args)
         {
-            // TODO: add parameters from args?
-            ArgsController.initArgs(args);
+
+            ArgsAdapter.initArgs(args);
             FractalViewer fractalViewer = new FractalViewer();
             fractalViewer.DrawImage();
             Console.ReadKey();
@@ -37,17 +37,44 @@ namespace INPTPZ1
     namespace Mathematics
     {
 
-        class ArgsController
+        class ArgsAdapter
         {
-            private static  int[] intargs;
-            private static  double[] doubleargs;
-            private static  String outputPath;
+            private static int[] intargs;
+            private static double[] doubleargs;
+            private static String outputPath;
 
             public static void initArgs(string[] args)
             {
                 intargs = SetIntArgs(args);
                 doubleargs = SetDoubleArgs(args);
                 outputPath = SetOutputPath(args);
+            }
+
+
+            private static String SetOutputPath(string[] args)
+            {
+                return args[6];
+            }
+
+            private static int[] SetIntArgs(string[] args)
+            {
+                intargs = new int[2];
+                for (int i = 0; i < intargs.Length; i++)
+                {
+                    intargs[i] = int.Parse(args[i]);
+                }
+
+                return intargs;
+            }
+
+            private static double[] SetDoubleArgs(string[] args)
+            {
+                doubleargs = new double[4];
+                for (int i = 0; i < doubleargs.Length; i++)
+                {
+                    doubleargs[i] = double.Parse(args[i + 2]);
+                }
+                return doubleargs;
             }
 
 
@@ -64,130 +91,102 @@ namespace INPTPZ1
                 return doubleargs[index];
             }
 
-            private static String SetOutputPath(string[] args){   
-                return args[6];
-            }
-
-            private static int[] SetIntArgs(string[] args)
-            {
-                intargs = new int[2];
-                for (int i = 0; i < intargs.Length; i++)
-                {
-                    intargs[i] = int.Parse(args[i]);
-                }
-
-            return intargs;
-            }
-
-            private static double[] SetDoubleArgs(string[] args)
-            {
-                doubleargs = new double[4];
-                for (int i = 0; i < doubleargs.Length; i++)
-                {   
-                    doubleargs[i] = double.Parse(args[i + 2]);
-                }
-            return doubleargs;
-            }
-
         }
 
         class FractalViewer
         {
-            private  Color[] colors;
-            private  Bitmap bitmap;
+            private Color[] colors;
+            private Bitmap bitmap;
             private NewtonFractal newtonFactorial;
 
-            public FractalViewer(){
-                bitmap = new Bitmap(ArgsController.GetIntArgs(0),ArgsController.GetIntArgs(1));
+            public FractalViewer()
+            {
+                bitmap = new Bitmap(ArgsAdapter.GetIntArgs(0), ArgsAdapter.GetIntArgs(1));
                 newtonFactorial = new NewtonFractal();
                 colors = new Color[]{
                 Color.Red, Color.Blue, Color.Green, Color.Yellow, Color.Orange,
                 Color.Fuchsia, Color.Gold, Color.Cyan, Color.Magenta };
             }
 
-            public void DrawImage(){
+            public void DrawImage()
+            {
 
-                for (int i = 0; i < bitmap.Width; i++) {
+                for (int i = 0; i < bitmap.Width; i++)
+                {
 
-                    for (int j = 0; j < bitmap.Height; j++) {
-                        newtonFactorial.SetComplexNumber(i,j);
-                        var id = newtonFactorial.SolveRoot();
+                    for (int j = 0; j < bitmap.Height; j++)
+                    {
+                        newtonFactorial.SetComplexNumber(i, j);
+                        var id = newtonFactorial.FindRootNumber();
                         var it = newtonFactorial.SolveEquationUsingNewtonsIteration();
-                        var vv = colors[id % colors.Length];
-                        vv = Color.FromArgb(vv.R, vv.G, vv.B);
-                        vv = Color.FromArgb(Math.Min(Math.Max(0, vv.R-it*2), 255), Math.Min(Math.Max(0, vv.G - it*2), 255), Math.Min(Math.Max(0, vv.B - it*2), 255));
-                        //vv = Math.Min(Math.Max(0, vv), 255);
-                        bitmap.SetPixel(j, i, vv);
+                        var color = colors[id % colors.Length];
+                        color = Color.FromArgb(color.R, color.G, color.B);
+                        color = Color.FromArgb(Math.Min(Math.Max(0, color.R - it * 2), 255), Math.Min(Math.Max(0, color.G - it * 2), 255), Math.Min(Math.Max(0, color.B - it * 2), 255));
+                        bitmap.SetPixel(j, i, color);
                     }
                 }
-                bitmap.Save(ArgsController.GetOutputPath() ?? "../../../out.png");
+                bitmap.Save(ArgsAdapter.GetOutputPath() ?? "../../../out.png");
             }
 
 
-    }
+        }
         class NewtonFractal
         {
 
-            private   double xmin;
-            private   double xmax;
-            private   double ymin;
-            private   double ymax;
-            private   double xstep;
-            private   double ystep;
-            private   Polynomial polynomial;
-            private   Polynomial derivativePolynomial;
+            private double xmin;
+            private double xmax;
+            private double ymin;
+            private double ymax;
+            private double xstep;
+            private double ystep;
+            private Polynomial polynomial;
+            private Polynomial derivativePolynomial;
             private List<ComplexNumber> roots;
             private ComplexNumber ox;
+            private const int ITERATIONSNUMBER = 30;
 
             public NewtonFractal()
             {
                 roots = new List<ComplexNumber>();
-                xmin = ArgsController.GetDoubleArgs(0);
-                xmax = ArgsController.GetDoubleArgs(1);
-                ymin = ArgsController.GetDoubleArgs(2);
-                ymax = ArgsController.GetDoubleArgs(3);
-                xstep = (xmax - xmin) / ArgsController.GetIntArgs(0);
-                ystep = (ymax - ymin) / ArgsController.GetIntArgs(1);
+                xmin = ArgsAdapter.GetDoubleArgs(0);
+                xmax = ArgsAdapter.GetDoubleArgs(1);
+                ymin = ArgsAdapter.GetDoubleArgs(2);
+                ymax = ArgsAdapter.GetDoubleArgs(3);
+                xstep = (xmax - xmin) / ArgsAdapter.GetIntArgs(0);
+                ystep = (ymax - ymin) / ArgsAdapter.GetIntArgs(1);
                 polynomial = getPolynomial();
                 derivativePolynomial = polynomial.Derive();
 
             }
 
 
-        private Polynomial getPolynomial()
-        {
-            Polynomial polynomial = new Polynomial();
-            polynomial.Coefficients.Add(new ComplexNumber() { Re = 1 });
-            polynomial.Coefficients.Add(ComplexNumber.Zero);
-            polynomial.Coefficients.Add(ComplexNumber.Zero);
-            polynomial.Coefficients.Add(new ComplexNumber() { Re = 1 });
-            return polynomial;
+            private Polynomial getPolynomial()
+            {
+                Polynomial polynomial = new Polynomial();
+                polynomial.Coefficients.Add(new ComplexNumber() { Re = 1 });
+                polynomial.Coefficients.Add(ComplexNumber.Zero);
+                polynomial.Coefficients.Add(ComplexNumber.Zero);
+                polynomial.Coefficients.Add(new ComplexNumber() { Re = 1 });
+                return polynomial;
 
-        }
+            }
+            public ComplexNumber SetComplexNumber(int i, int j)
+            {
+                ComplexNumber ox = new ComplexNumber()
+                {
+                    Re = xmin + j * xstep,
+                    Imaginari = ymin + i * ystep
+                };
 
-        public void DisplayPolynomials()
-        {
-            Console.WriteLine(polynomial);
-            Console.WriteLine(derivativePolynomial);
-        }
+                if (ox.Re == 0)
+                    ox.Re = 0.0001;
+                if (ox.Imaginari == 0)
+                    ox.Imaginari = 0.0001;
 
-        public ComplexNumber SetComplexNumber(int i ,int j)
-        {
-            ComplexNumber ox = new ComplexNumber()
-                    {
-                        Re = xmin + j * xstep,
-                        Imaginari = ymin + i * ystep
-                    };
+                return ox;
 
-                    if (ox.Re == 0)
-                        ox.Re = 0.0001;
-                    if (ox.Imaginari == 0)
-                        ox.Imaginari = 0.0001;
-
-            return ox;
-
-        }
-            public int SolveRoot()
+            }
+            public int FindRootNumber()
             {
                 var known = false;
                 var id = 0;
@@ -210,21 +209,20 @@ namespace INPTPZ1
 
             public int SolveEquationUsingNewtonsIteration()
             {
-                int iteration = 0;
-                for (int i = 0; i < 30; i++)
+                int iterationCounter = 0;
+                for (int i = 0; i < ITERATIONSNUMBER; i++)
                 {
                     var diff = polynomial.Evaluate(ox).Divide(derivativePolynomial.Evaluate(ox));
                     ox = ox.Subtract(diff);
 
-                    //Console.WriteLine($"{q} {ox} -({diff})");
                     if (Math.Pow(diff.Re, 2) + Math.Pow(diff.Imaginari, 2) >= 0.5)
                     {
                         i--;
                     }
-                    iteration++;
+                    iterationCounter++;
                 }
 
-                return iteration;
+                return iterationCounter;
             }
 
 
@@ -319,7 +317,7 @@ namespace INPTPZ1
             }
             public double GetAbS()
             {
-                return Math.Sqrt( Re * Re + Imaginari * Imaginari);
+                return Math.Sqrt(Re * Re + Imaginari * Imaginari);
             }
 
             public ComplexNumber Add(ComplexNumber summand)
