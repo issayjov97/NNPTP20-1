@@ -27,7 +27,7 @@ namespace INPTPZ1
         static void Main(string[] args)
         {
 
-            ArgsAdapter.initArgs(args);
+            CommandLineParameters.SetCommandLineParameters(args);
             FractalViewer fractalViewer = new FractalViewer();
             fractalViewer.DrawImage();
             Console.ReadKey();
@@ -37,58 +37,42 @@ namespace INPTPZ1
     namespace Mathematics
     {
 
-        class ArgsAdapter
+        class CommandLineParameters
         {
-            private static int[] intargs;
-            private static double[] doubleargs;
+            private static int[] geometricMeasurements;
+            private static double[] axesCoordinates;
             private static String outputPath;
+            private static string[] commandLineParameters;
 
-            public static void initArgs(string[] args)
-            {
-                intargs = SetIntArgs(args);
-                doubleargs = SetDoubleArgs(args);
-                outputPath = SetOutputPath(args);
+            public static void SetCommandLineParameters(string[] inputArgs){
+                commandLineParameters = inputArgs;
             }
-
-
-            private static String SetOutputPath(string[] args)
-            {
-                return args[6];
-            }
-
-            private static int[] SetIntArgs(string[] args)
-            {
-                intargs = new int[2];
-                for (int i = 0; i < intargs.Length; i++)
-                {
-                    intargs[i] = int.Parse(args[i]);
-                }
-
-                return intargs;
-            }
-
-            private static double[] SetDoubleArgs(string[] args)
-            {
-                doubleargs = new double[4];
-                for (int i = 0; i < doubleargs.Length; i++)
-                {
-                    doubleargs[i] = double.Parse(args[i + 2]);
-                }
-                return doubleargs;
-            }
-
 
             public static String GetOutputPath()
             {
-                return outputPath;
+                
+                return outputPath == null ? commandLineParameters[6]:outputPath ;
             }
-            public static int GetIntArgs(int index)
+            public static int GetGeometricMeasurements(int index)
             {
-                return intargs[index];
+                if(geometricMeasurements == null){
+                    for (int i = 0; i < geometricMeasurements.Length; i++)
+                    {
+                    geometricMeasurements[i] = int.Parse(commandLineParameters[i]);
+                 }
+                }
+                return geometricMeasurements[index];
             }
-            public static double GetDoubleArgs(int index)
+            public static double GetAxesCoordinates(int index)
             {
-                return doubleargs[index];
+                if(axesCoordinates == null){
+                axesCoordinates = new double[4];
+                for (int i = 0; i < axesCoordinates.Length; i++)
+                {
+                    axesCoordinates[i] = double.Parse(commandLineParameters[i + 2]);
+                }
+                }
+                return axesCoordinates[index];
             }
 
         }
@@ -101,7 +85,7 @@ namespace INPTPZ1
 
             public FractalViewer()
             {
-                bitmap = new Bitmap(ArgsAdapter.GetIntArgs(0), ArgsAdapter.GetIntArgs(1));
+                bitmap = new Bitmap(CommandLineParameters.GetGeometricMeasurements(0), CommandLineParameters.GetGeometricMeasurements(1));
                 newtonFactorial = new NewtonFractal();
                 colors = new Color[]{
                 Color.Red, Color.Blue, Color.Green, Color.Yellow, Color.Orange,
@@ -113,7 +97,6 @@ namespace INPTPZ1
 
                 for (int i = 0; i < bitmap.Width; i++)
                 {
-
                     for (int j = 0; j < bitmap.Height; j++)
                     {
                         newtonFactorial.SetComplexNumber(i, j);
@@ -125,7 +108,7 @@ namespace INPTPZ1
                         bitmap.SetPixel(j, i, color);
                     }
                 }
-                bitmap.Save(ArgsAdapter.GetOutputPath() ?? "../../../out.png");
+                bitmap.Save(CommandLineParameters.GetOutputPath() ?? "../../../out.png");
             }
 
 
@@ -148,19 +131,19 @@ namespace INPTPZ1
             public NewtonFractal()
             {
                 roots = new List<ComplexNumber>();
-                xmin = ArgsAdapter.GetDoubleArgs(0);
-                xmax = ArgsAdapter.GetDoubleArgs(1);
-                ymin = ArgsAdapter.GetDoubleArgs(2);
-                ymax = ArgsAdapter.GetDoubleArgs(3);
-                xstep = (xmax - xmin) / ArgsAdapter.GetIntArgs(0);
-                ystep = (ymax - ymin) / ArgsAdapter.GetIntArgs(1);
-                polynomial = getPolynomial();
+                xmin = CommandLineParameters.GetAxesCoordinates(0);
+                xmax = CommandLineParameters.GetAxesCoordinates(1);
+                ymin = CommandLineParameters.GetAxesCoordinates(2);  
+                ymin = CommandLineParameters.GetAxesCoordinates(3);
+                xstep = (xmax - xmin) / CommandLineParameters.GetGeometricMeasurements(0);
+                ystep = (ymax - ymin) / CommandLineParameters.GetGeometricMeasurements(1);
+                polynomial = GetPolynomial();
                 derivativePolynomial = polynomial.Derive();
 
             }
 
 
-            private Polynomial getPolynomial()
+            private Polynomial GetPolynomial()
             {
                 Polynomial polynomial = new Polynomial();
                 polynomial.Coefficients.Add(new ComplexNumber() { Re = 1 });
@@ -170,18 +153,18 @@ namespace INPTPZ1
                 return polynomial;
 
             }
-            public ComplexNumber SetComplexNumber(int i, int j)
+            public ComplexNumber SetComplexNumber(int y, int x)
             {
                 ComplexNumber ox = new ComplexNumber()
                 {
-                    Re = xmin + j * xstep,
-                    Imaginari = ymin + i * ystep
+                    Re = xmin + x * xstep,
+                    Im = ymin + y * ystep
                 };
 
                 if (ox.Re == 0)
                     ox.Re = 0.0001;
-                if (ox.Imaginari == 0)
-                    ox.Imaginari = 0.0001;
+                if (ox.Im == 0)
+                    ox.Im = 0.0001;
 
                 return ox;
 
@@ -192,7 +175,7 @@ namespace INPTPZ1
                 var id = 0;
                 for (int i = 0; i < roots.Count; i++)
                 {
-                    if (Math.Pow(ox.Re - roots[i].Re, 2) + Math.Pow(ox.Imaginari - roots[i].Imaginari, 2) <= 0.01)
+                    if (Math.Pow(ox.Re - roots[i].Re, 2) + Math.Pow(ox.Im - roots[i].Im, 2) <= 0.01)
                     {
                         known = true;
                         id = i;
@@ -215,7 +198,7 @@ namespace INPTPZ1
                     var diff = polynomial.Evaluate(ox).Divide(derivativePolynomial.Evaluate(ox));
                     ox = ox.Subtract(diff);
 
-                    if (Math.Pow(diff.Re, 2) + Math.Pow(diff.Imaginari, 2) >= 0.5)
+                    if (Math.Pow(diff.Re, 2) + Math.Pow(diff.Im, 2) >= 0.5)
                     {
                         i--;
                     }
@@ -289,14 +272,14 @@ namespace INPTPZ1
         public class ComplexNumber
         {
             public double Re { get; set; }
-            public double Imaginari { get; set; }
+            public double Im { get; set; }
 
             public override bool Equals(object obj)
             {
                 if (obj is ComplexNumber)
                 {
                     ComplexNumber complexNumber = obj as ComplexNumber;
-                    return complexNumber.Re == Re && complexNumber.Imaginari == Imaginari;
+                    return complexNumber.Re == Re && complexNumber.Im == Im;
                 }
                 return base.Equals(obj);
             }
@@ -304,20 +287,20 @@ namespace INPTPZ1
             public readonly static ComplexNumber Zero = new ComplexNumber()
             {
                 Re = 0,
-                Imaginari = 0
+                Im = 0
             };
 
             public ComplexNumber Multiply(ComplexNumber multiplicand)
             {
                 return new ComplexNumber()
                 {
-                    Re = this.Re * multiplicand.Re - this.Imaginari * multiplicand.Imaginari,
-                    Imaginari = this.Re * multiplicand.Imaginari + this.Imaginari * multiplicand.Re
+                    Re = this.Re * multiplicand.Re - this.Im * multiplicand.Im,
+                    Im = this.Re * multiplicand.Im + this.Im * multiplicand.Re
                 };
             }
             public double GetAbS()
             {
-                return Math.Sqrt(Re * Re + Imaginari * Imaginari);
+                return Math.Sqrt(Re * Re + Im * Im);
             }
 
             public ComplexNumber Add(ComplexNumber summand)
@@ -325,36 +308,36 @@ namespace INPTPZ1
                 return new ComplexNumber()
                 {
                     Re = this.Re + summand.Re,
-                    Imaginari = this.Imaginari + summand.Imaginari
+                    Im = this.Im + summand.Im
                 };
             }
             public double GetAngleInDegrees()
             {
-                return Math.Atan(Imaginari / Re);
+                return Math.Atan(Im / Re);
             }
             public ComplexNumber Subtract(ComplexNumber subtrahend)
             {
                 return new ComplexNumber()
                 {
                     Re = this.Re - subtrahend.Re,
-                    Imaginari = this.Imaginari - subtrahend.Imaginari
+                    Im = this.Im - subtrahend.Im
                 };
             }
 
             public override string ToString()
             {
-                return $"({Re} + {Imaginari}i)";
+                return $"({Re} + {Im}i)";
             }
 
             internal ComplexNumber Divide(ComplexNumber divisor)
             {
-                var tmp = this.Multiply(new ComplexNumber() { Re = divisor.Re, Imaginari = -divisor.Imaginari });
-                var tmp2 = divisor.Re * divisor.Re + divisor.Imaginari * divisor.Imaginari;
+                var numerator = this.Multiply(new ComplexNumber() { Re = divisor.Re, Im = -divisor.Im });
+                var denominator = divisor.Re * divisor.Re + divisor.Im * divisor.Im;
 
                 return new ComplexNumber()
                 {
-                    Re = tmp.Re / tmp2,
-                    Imaginari = tmp.Imaginari / tmp2
+                    Re = numerator.Re / denominator,
+                    Im = numerator.Im / denominator
                 };
             }
         }
