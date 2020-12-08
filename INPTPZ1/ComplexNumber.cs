@@ -2,7 +2,6 @@ using System;
 
 namespace Mathematics
 {
-
     public class ComplexNumber
     {
         public double Re { get; set; }
