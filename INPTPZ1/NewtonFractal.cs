@@ -19,18 +19,18 @@ namespace Mathematics
         private Polynomial polynomial;
         private Polynomial derivativePolynomial;
         private List<ComplexNumber> roots;
-        private ComplexNumber ox;
+        private ComplexNumber complexNumber;
         private const int ITERATIONSNUMBER = 30;
 
         public NewtonFractal()
         {
             roots = new List<ComplexNumber>();
-            xmin = CommandLineParameters.GetAxesCoordinates(0);
-            xmax = CommandLineParameters.GetAxesCoordinates(1);
-            ymin = CommandLineParameters.GetAxesCoordinates(2);
-            ymin = CommandLineParameters.GetAxesCoordinates(3);
-            xstep = (xmax - xmin) / CommandLineParameters.GetGeometricMeasurements(0);
-            ystep = (ymax - ymin) / CommandLineParameters.GetGeometricMeasurements(1);
+            xmin = CommandLineInputHandler.GetAxesCoordinates(0);
+            xmax = CommandLineInputHandler.GetAxesCoordinates(1);
+            ymin = CommandLineInputHandler.GetAxesCoordinates(2);
+            ymin = CommandLineInputHandler.GetAxesCoordinates(3);
+            xstep = (xmax - xmin) / CommandLineInputHandler.GetGeometricMeasurements(0);
+            ystep = (ymax - ymin) / CommandLineInputHandler.GetGeometricMeasurements(1);
             polynomial = GetPolynomial();
             derivativePolynomial = polynomial.Derive();
 
@@ -49,18 +49,18 @@ namespace Mathematics
         }
         public ComplexNumber SetComplexNumber(int y, int x)
         {
-            ComplexNumber ox = new ComplexNumber()
+             complexNumber = new ComplexNumber()
             {
                 Re = xmin + x * xstep,
                 Im = ymin + y * ystep
             };
 
-            if (ox.Re == 0)
-                ox.Re = 0.0001;
-            if (ox.Im == 0)
-                ox.Im = 0.0001;
+            if (complexNumber.Re == 0)
+                complexNumber.Re = 0.0001;
+            if (complexNumber.Im == 0)
+                complexNumber.Im = 0.0001;
 
-            return ox;
+            return complexNumber;
 
         }
         public int FindRootNumber()
@@ -69,7 +69,7 @@ namespace Mathematics
             var id = 0;
             for (int i = 0; i < roots.Count; i++)
             {
-                if (Math.Pow(ox.Re - roots[i].Re, 2) + Math.Pow(ox.Im - roots[i].Im, 2) <= 0.01)
+                if (Math.Pow(complexNumber.Re - roots[i].Re, 2) + Math.Pow(complexNumber.Im - roots[i].Im, 2) <= 0.01)
                 {
                     known = true;
                     id = i;
@@ -77,7 +77,7 @@ namespace Mathematics
             }
             if (!known)
             {
-                roots.Add(ox);
+                roots.Add(complexNumber);
                 id = roots.Count;
             }
 
@@ -89,10 +89,10 @@ namespace Mathematics
             int iterationCounter = 0;
             for (int i = 0; i < ITERATIONSNUMBER; i++)
             {
-                var diff = polynomial.Evaluate(ox).Divide(derivativePolynomial.Evaluate(ox));
-                ox = ox.Subtract(diff);
+                var difference = polynomial.Evaluate(complexNumber).Divide(derivativePolynomial.Evaluate(complexNumber));
+                complexNumber = complexNumber.Subtract(difference);
 
-                if (Math.Pow(diff.Re, 2) + Math.Pow(diff.Im, 2) >= 0.5)
+                if (Math.Pow(difference.Re, 2) + Math.Pow(difference.Im, 2) >= 0.5)
                 {
                     i--;
                 }

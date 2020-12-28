@@ -14,7 +14,7 @@ using System.Drawing.Drawing2D;
 using System.Linq.Expressions;
 using System.Threading;
 using INPTPZ1.Mathematics;
-using INPTPZ1.CommandLineParameters;
+using INPTPZ1.CommandLineInputHandler;
 using Mathematics.FractalViewer;
 
 namespace INPTPZ1
@@ -29,7 +29,7 @@ namespace INPTPZ1
         static void Main(string[] args)
         {
 
-            CommandLineParameters.SetCommandLineParameters(args);
+            CommandLineInputHandler.SetCommandLineParameters(args);
             FractalViewer fractalViewer = new FractalViewer();
             fractalViewer.DrawImage();
             Console.ReadKey();

@@ -9,7 +9,7 @@ using System.Drawing.Text;
 using System.Drawing.Drawing2D;
 using System.Linq.Expressions;
 using Mathematics.NewtonFractal;
-using INPTPZ1.CommandLineParameters;
+using INPTPZ1.CommandLineInputHandler;
 
 
 
@@ -20,10 +20,13 @@ namespace Mathematics
         private Color[] colors;
         private Bitmap bitmap;
         private NewtonFractal newtonFactorial;
-
+        private static readonly String defaultOutupPath = "../../../out.png";
         public FractalViewer()
         {
-            bitmap = new Bitmap(CommandLineParameters.GetGeometricMeasurements(0), CommandLineParameters.GetGeometricMeasurements(1));
+            bitmap = new Bitmap(
+                CommandLineInputHandler.GetGeometricMeasurements(0), 
+                CommandLineInputHandler.GetGeometricMeasurements(1)
+                );
             newtonFactorial = new NewtonFractal();
             colors = new Color[]{
                 Color.Red, Color.Blue, Color.Green, Color.Yellow, Color.Orange,
@@ -41,12 +44,11 @@ namespace Mathematics
                     var id = newtonFactorial.FindRootNumber();
                     var it = newtonFactorial.SolveEquationUsingNewtonsIteration();
                     var color = colors[id % colors.Length];
-                    color = Color.FromArgb(color.R, color.G, color.B);
                     color = Color.FromArgb(Math.Min(Math.Max(0, color.R - it * 2), 255), Math.Min(Math.Max(0, color.G - it * 2), 255), Math.Min(Math.Max(0, color.B - it * 2), 255));
                     bitmap.SetPixel(j, i, color);
                 }
             }
-            bitmap.Save(CommandLineParameters.GetOutputPath() ?? "../../../out.png");
+            bitmap.Save(CommandLineInputHandler.GetOutputPath() ?? defaultOutupPath);
         }
 
 

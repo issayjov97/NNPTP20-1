@@ -9,18 +9,20 @@ namespace Mathematics
 
         public override bool Equals(object obj)
         {
+            var double epsilon = 0.0001;
             if (obj is ComplexNumber)
             {
                 ComplexNumber complexNumber = obj as ComplexNumber;
-                return complexNumber.Re == Re && complexNumber.Im == Im;
+                return (Math.abs(complexNumber.Re - Re) < epsilon) 
+                && (Math.abs(complexNumber.Im - Im) < epsilon);
             }
             return base.Equals(obj);
         }
 
         public readonly static ComplexNumber Zero = new ComplexNumber()
         {
-            Re = 0,
-            Im = 0
+            Re = 0.0,
+            Im = 0.0
         };
 
         public ComplexNumber Multiply(ComplexNumber multiplicand)
@@ -46,7 +48,8 @@ namespace Mathematics
         }
         public double GetAngleInDegrees()
         {
-            return Math.Atan(Im / Re);
+
+            return Math.Atan(Im / Re) * (180/Math.PI);
         }
         public ComplexNumber Subtract(ComplexNumber subtrahend)
         {

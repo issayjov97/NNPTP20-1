@@ -26,19 +26,19 @@ namespace Mathematics
             ComplexNumber result = ComplexNumber.Zero;
             for (int i = 0; i < Coefficients.Count; i++)
             {
-                ComplexNumber coef = Coefficients[i];
-                ComplexNumber bx = value;
+                ComplexNumber currentCoefficient = Coefficients[i];
+                ComplexNumber currentValue = value;
                 int power = i;
 
                 if (i > 0)
                 {
                     for (int j = 0; j < power - 1; j++)
-                        bx = bx.Multiply(value);
+                        currentValue = currentValue.Multiply(value);
 
-                    coef = coef.Multiply(bx);
+                    currentCoefficient = currentCoefficient.Multiply(currentValue);
                 }
 
-                result = result.Add(coef);
+                result = result.Add(currentCoefficient);
             }
 
             return result;
